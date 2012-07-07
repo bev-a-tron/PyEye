@@ -14,7 +14,7 @@ from PIL import Image
 #import pdb
 
 def main(dim=(250,600)): # strange how it makes you put it in y,x
-    center=(dim[0]/2,dim[1]/2)
+    top_corner = (0,dim[1]/2)
     num_blocks = 4
 
     img = CreateCanvas(dim=dim)
@@ -26,14 +26,18 @@ def main(dim=(250,600)): # strange how it makes you put it in y,x
 
     noise_block = CreateNoiseBlock(dim=dim,num_blocks=num_blocks)
     img = CopyNoiseBlock(img,noise_block,num_blocks)
-   # shape = GetShape(img,mode='circle',size=140,position=center)
-   # processed_shape = MoveShape(shape,depth=10,,position=center)
-   # neg_shape = MoveShape(shape,depth=-dim[0]/num_blocks)
-   # new_img = SumImages(img,processed_shape,neg_shape)
+    
+    # pdb.set_trace()    
 
-   # pdb.set_trace()
+    shape = GetShape(img,mode='circle',size=140,position=top_corner)
+    # processed_shape = MoveShape(shape,depth=10,,position=center)
+    # neg_shape = MoveShape(shape,depth=-dim[0]/num_blocks)
+    # new_img = SumImages(img,processed_shape,neg_shape)
 
-    return img
+    
+
+    return shape
+    # TODO: write out image to file
 
 def CreateCanvas(dim):
     a=numpy.zeros([dim[0],dim[1],4],dtype='uint8')
@@ -42,7 +46,7 @@ def CreateCanvas(dim):
 def CreateNoiseBlock(dim, num_blocks):
     img = Image.open('pattern.png')
     img = numpy.array(img)
-    
+    # TODO: maybe add Gaussian noise? (numpy.random.normal)
     return img
 
 def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoiseBlock ?
@@ -53,6 +57,33 @@ def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoi
         start = i * size
         final[:,start:size+start,:]=noise_block
     return final
+
+# shape = GetShape(img,mode='circle',size=140,position=center)
+
+def GetShape(img, mode, size, position):
+    # read the img file
+    mask = Image.open('circle.bmp') # TODO: extract config.
+    mask = numpy.array(mask)
+
+    ylen=mask.shape[0]
+    xlen=mask.shape[1]
+
+    mask = numpy.array(mask) > (255/2) # super simple comparator
+
+    # position is the top left corner
+    ystart = position[0]
+    xstart = position[1]
+
+    yend = ystart + ylen
+    xend = xstart + xlen
+
+    shape = numpy.zeros(img.shape,dtype='uint8')
+    shape[ ystart:yend, xstart:xend, 0:3 ] = img[ ystart:yend, xstart:xend, 0:3 ] * mask
+
+    # shape = numpy.resize(shape, [ylen, xlen, 4])
+    shape[:,:,3] = 255
+
+    return shape
 
 if __name__=="__main__":
     main()
