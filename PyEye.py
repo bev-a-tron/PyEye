@@ -11,6 +11,7 @@
 
 import numpy
 from PIL import Image
+#import pdb
 
 def main(dim=(250,600)): # strange how it makes you put it in y,x
     center=(dim[0]/2,dim[1]/2)
@@ -30,6 +31,10 @@ def main(dim=(250,600)): # strange how it makes you put it in y,x
    # neg_shape = MoveShape(shape,depth=-dim[0]/num_blocks)
    # new_img = SumImages(img,processed_shape,neg_shape)
 
+   # pdb.set_trace()
+
+    return img
+
 def CreateCanvas(dim):
     a=numpy.zeros([dim[0],dim[1],4],dtype='uint8')
     return a
@@ -37,6 +42,7 @@ def CreateCanvas(dim):
 def CreateNoiseBlock(dim, num_blocks):
     img = Image.open('pattern.png')
     img = numpy.array(img)
+    
     return img
 
 def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoiseBlock ?
