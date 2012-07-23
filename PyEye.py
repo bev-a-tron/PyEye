@@ -28,8 +28,9 @@ def main(dim=(250,600)): # strange how it makes you put it in y,x
     #       maybe we don't neeeed a CreateCanvas...
 
     # TODO: ATM, canvas size has to be a multiple of block size.
+    #noise_block = CreateNoiseBlock(dim=dim,num_blocks=num_blocks)
 
-    noise_block = CreateNoiseBlock(dim=dim,num_blocks=num_blocks)
+    noise_block = ReadNoiseBlock()
     img = CopyNoiseBlock(img,noise_block,num_blocks)
     
     # pdb.set_trace()    
@@ -48,7 +49,7 @@ def CreateCanvas(dim):
     a=numpy.zeros([dim[0],dim[1],4],dtype='uint8')
     return a
 
-def CreateNoiseBlock(dim, num_blocks):
+def ReadNoiseBlock():
     img = Image.open('noisy_pattern2.png')
     #img = Image.open('grid.png')
     img = numpy.array(img)
