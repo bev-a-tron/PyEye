@@ -93,21 +93,18 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     canvas_with_shifted_shape = numpy.zeros(img_size)
     # paste the cut shape on the array of zeros, at the shifted position
 
-    cut_shape_primary=cut_shape.copy()
-
     inv_template = numpy.invert(mask_panel)    
-    inv_template_primary = inv_template.copy()
 
     ystart = insert_position[0]
     xstart = insert_position[1] + shift
 
     if (xstart < 0): # left shift
-        cut_shape_shadow = cut_shape[:,-xstart:]
-        inv_template_shadow = inv_template[:,-xstart:]
+        cut_shape = cut_shape[:,-xstart:]
+        inv_template = inv_template[:,-xstart:]
 
     if (xstart + cut_shape.shape[1] > img_size[1]): # right shift
-        cut_shape_primary = cut_shape[:,0:img_size[1]-xstart]
-        inv_template_primary = inv_template[:,0:img_size[1]-xstart]
+        cut_shape = cut_shape[:,0:img_size[1]-xstart]
+        inv_template = inv_template[:,0:img_size[1]-xstart]
     # TODO: Need to do the same for y-axis
 
     cut_shape_ylen = cut_shape.shape[0]
