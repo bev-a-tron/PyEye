@@ -5,12 +5,26 @@
 This will test stuff.
 '''
 
-import PyEye
+import PyEye,numpy
+
+def helper_GetCanvas():
+    return PyEye.CreateCanvas(dim=(250,600))
+
+def helper_GetNoiseBlock():
+    return PyEye.ReadNoiseBlock()
+
+def helper_GetFullBackground():
+    canvas = helper_GetCanvas()
+    noise_block = helper_GetNoiseBlock()
+    return PyEye.CopyNoiseBlock(canvas,noise_block=noise_block,num_blocks=4)
+
+def helper_GetMask():
+    return PyEye.MakeMask('circle.bmp')
 
 def test_CreateCanvas():
-    img = PyEye.CreateCanvas(dim=(200,600))
+    img = helper_GetCanvas()
 
-    img_shape_expected = (200,600,4)
+    img_shape_expected = (250,600,4)
     img_shape_okay = img.shape == img_shape_expected
 
     img_dtype_expected = 'uint8'
@@ -18,19 +32,40 @@ def test_CreateCanvas():
 
     return img_shape_okay and img_dtype_okay
 
-def test_ReadNoiseBlock():
-    noise_block = PyEye.ReadNoiseBlock()
-    return False
-
-'''
 def test_CopyNoiseBlock():
+    img = helper_GetFullBackground()
+    noise_block = helper_GetNoiseBlock()
 
-def test_MakeMask():
+    panel1 = img[:,0:150,:]
+    panel2 = img[:,150:300,:]
+    panel3 = img[:,300:450,:]
+    panel4 = img[:,450:600,:]
+
+    panel_expected = noise_block
+    
+    return panel1.all() == panel2.all() == panel3.all() == panel4.all() == panel_expected.all()
 
 def test_GetShape():
+    img = helper_GetFullBackground()
+    # mask = helper_GetMask()
+    position = (0,0)
+
+    noise_block = helper_GetNoiseBlock()
+
+    shape_ones = PyEye.GetShape(img, numpy.ones([250,150,3]), position)
+    shape_zeroes = PyEye.GetShape(img, numpy.zeros([250,150,3]), position)
+
+    check_ones = shape_ones.all() == noise_block.all()
+    check_zeroes = shape_zeroes.all() == numpy.zeros([250,150]).all()
+    
+    return check_ones and check_zeroes
+
+def test_ShiftShape():
+    
+    return False
 
 def test_AssembleLayer():
-'''    
+    return False
 
 def MagicTest(function):
     lulu = eval('test_' + function + '()')    
@@ -42,35 +77,12 @@ def MagicTest(function):
 if __name__ == "__main__":
 
     MagicTest('CreateCanvas')
-    MagicTest('ReadNoiseBlock')
+    #MagicTest('ReadNoiseBlock')
     MagicTest('CopyNoiseBlock')
-    MagicTest('MakeMask')
+    #MagicTest('MakeMask')
     MagicTest('GetShape')
-    MagicTest('AssembleLayer')
-
-
-    '''
-    if CreateCanvas(): result = 'Pass'
-    else: result = 'Fail'
-    print 'CreateCanvas ' + result
-
-    print 'CopyNoiseBlock?'
-    if test_CopyNoiseBlock(): print 'Pass'
-    else: print 'Fail'
-
-    print 'MakeMask?'
-    if test_MakeMask(): print 'Pass'
-    else: print 'Fail'
-
-    print 'GetShape?'
-    if test_GetShape(): print 'Pass'
-    else: print 'Fail'
-
-    print 'AssembleLayer?'
-    if test_AssembleLayer(): print 'Pass'
-    else: print 'Fail'
-    '''
-    
+    MagicTest('ShiftShape')
+    #MagicTest('AssembleLayer')    
 
 '''
 def main(dim=(250,600)): # strange how it makes you put it in y,x
