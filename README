@@ -3,3 +3,6 @@ This is a Magic Eye generator.
 Takes a black and white BMP image.
 Makes a Magic Eye image (250,600) with the image.
 Hardwired: background pattern is a (250,150) color PNG image.
+
+Made by B A Lau and G R Stearns at Hacker School
+Summer 2012
