@@ -76,11 +76,13 @@ def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoi
 def MakeMask(maskfile='circle.bmp'):
     # read the img file
     mask = Image.open(maskfile)
-    mask = numpy.array(mask) > (255/2) # super simple comparator
+    mask = numpy.array(mask,dtype='bool') > (255/2) # super simple comparator
+    ### 27 JULY 2012 6:37am (probably CDT): THIS BOOL FIXED IT!  BL
     return mask
     
     # by making a new array and copying?
-    numask = numpy.ones([mask.shape[0], mask.shape[1], 4])
+    numask = numpy.ones([mask.shape[0], mask.shape[1], 4],dtype='uint8')
+    ### 27 JULY 2012 6:37am (probably CDT): POSSIBLY THIS UINT8 FIXED IT!  BL
     numask[:,:,3] = 255
     numask[:,:,0:3] = mask
 
@@ -120,7 +122,7 @@ def GetShape(canvas, mask, position):
     #figure(),imshow(cut_slice)
     #savefig('gs_cut_slice.png',format='png',bbox_inches='tight')
 
-    return cut_slice
+    return cut_slice.astype('uint8')
 
 # put filled template on empty canvas-sized layer at the right place
 def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
@@ -144,17 +146,27 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     xend = xstart + cut_shape_xlen
     yend = ystart + cut_shape_ylen
 
-    print canvas_with_shifted_shape.shape # size is 3
-    print cut_shape.shape
+    print 'ss canvas_with_shifted_shape.shape: ', canvas_with_shifted_shape.shape # size is 4
+    print 'ss cut_shape.shape: ', cut_shape.shape #size is 3
 
-    canvas_with_shifted_shape[ ystart:yend, xstart:xend, 0:3 ] = cut_shape[:,:,0:3]
+    print ystart, yend
+    print xstart, xend
+    canvas_with_shifted_shape[ ystart:yend, xstart:xend, 0:3 ] = cut_shape
+    print canvas_with_shifted_shape[:,:,3]
+
+    #Bev added the following on 25 July 2012 on an airplane between Baltimore and Houston
+    #It fixes one problem (the canvas-being-blank problem)
+    canvas_with_shifted_shape[:,:,3] = 255 
 
     figure(),imshow(cut_shape)
-    savefig('ss_cut_shape.png',format='png',bbox_inches='tight')
+    savefig('ss_cut_shape2.png',format='png',bbox_inches='tight')
     numpy.save('cut_shape.npy',cut_shape) 
+
     figure(),imshow(canvas_with_shifted_shape[ ystart:yend, xstart:xend, 0:3 ])
     savefig('ss_canvas_with_shifted_shape_panel.png',format='png',bbox_inches='tight')
+
     figure(),imshow(canvas_with_shifted_shape)
+    savefig('ss_canvas_with_shifted_shape.png',format='png',bbox_inches='tight')
     savefig('BALALALALLALAL.png',format='png',bbox_inches='tight')
     numpy.save('canvas_with_shifted_shape.npy',canvas_with_shifted_shape)
 
@@ -200,7 +212,20 @@ def ApplyDecalLayerToCanvas(canvas, decal_layer):
     figure(),imshow(decal_layer)
     savefig('adltc_decal_layer.png',format='png',bbox_inches='tight')
 
-    p = decal_layer!=0 
+    p = decal_layer!=0 # bunch of true/false values
+    #figure(),hist(p.flatten(),bins=50)
+    #savefig('adltc_histp.png',format='png',bbox_inches='tight')
+    #print p[150:170,90:110]
+
+    #ind = numpy.nonzero(p)
+    #print ind
+
+    #figure(),imshow(p)
+    #savefig('adltc_p.png',format='png',bbox_inches='tight')
+
+    #nope, this is broken now.  need to replace pixels!!!  25 July 2012 BL
+    #canvas = decal_layer * p #probably calling this wrong
+
     canvas[p] = decal_layer[p]
     return canvas
     # the cheese slab is half a line now.
@@ -223,9 +248,8 @@ def AssembleLayer(canvas, mask_panel, decal_panel, insert_position, primary_shif
     
     canvas1 = ApplyDecalLayerToCanvas(canvas, primary_decal_layer)
     
-    figure(),imshow(canvas1)
-    savefig('ex_canvas1.png',format='png',bbox_inches='tight')
-
+    #figure(),imshow(canvas1)
+    #savefig('ex_canvas1.png',format='png',bbox_inches='tight')
 
     shadow_decal_layer = ShiftShape(img_size, mask_panel, decal_panel, insert_position, shadow_shift + primary_shift)
     canvas2 = ApplyDecalLayerToCanvas(canvas1, shadow_decal_layer)
