@@ -5,53 +5,66 @@ from pylab import *
 import numpy
 from PIL import Image
 
-def main(dim=(250,600)): # strange how it makes you put it in y,x
-    num_blocks = 4    
-    slice_size = dim[1]/num_blocks
 
-    top_corner = ( 0, (dim[1] - slice_size)/2 - 50 )
-    # TODO: actually fix the shadow.  Minus 50 just shifts the image
-    # enough so the shadow gets pushed off.
+import pdb # TODO: remove me
 
-    canvas = CreateCanvas(dim=dim)
+def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', out_file_name='final_img', out_file_type='png'):
+# NOTE: strange how it makes you put it in y,x
 
-    # TODO: should we just start with the noise block and replicate it out?
-    #       maybe we don't neeeed a CreateCanvas...
-
-    # TODO: ATM, canvas size has to be a multiple of block size.
-    #noise_block = CreateNoiseBlock(dim=dim,num_blocks=num_blocks)
-
-    noise_block = ReadNoiseBlock()
-    canvas = CopyNoiseBlock(canvas,noise_block,num_blocks)
+    canvas = CreateBackground(noisefile=bg_file)
     
     # TODO: make function to convert depth to shift
-    mask_panel = MakeMask('star.bmp') # default is circle.bmp
-    decal_panel = GetShape(canvas, mask_panel, top_corner) # we really need to rename "shape"
+    mask_panel = MakeMask(mask_file) # default is circle.bmp
+
+
+    # TODO: this uses the mask for the panel. they're the same for now, but no guarantee
+    # TODO: when this goes OO, we can easily grab the panel's size prop
+    # TODO: figure out a way to not need this...
+    panel_size = mask_panel.shape
+
+    slice_size = panel_size[1]
+    top_corner = ( 0, (dim[1] - slice_size)/2 - 50 )
+
+
+    decal_panel = GetShape(canvas, mask_panel, top_corner) # TODO: we really need to rename "shape"
     final_img = AssembleLayer(canvas, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size) 
 
     figure(),imshow(final_img)
-    savefig('final_img.png',format='png',bbox_inches='tight')
+    savefig(out_file_name,format=out_file_type,bbox_inches='tight')
     
     return final_img
 
 
+def CreateBackground(noisefile, num_blocks = 4):
+    background_panel = ReadNoiseBlock(noisefile)
+    
+    bgs = background_panel.shape
+    dim = (bgs[0], bgs[1] * num_blocks)
+    
+    canvas = CreateCanvas(dim)
+    canvas = CopyNoiseBlock(canvas, background_panel, num_blocks)
+
+    return canvas
+
+
 def CreateCanvas(dim):
-    a=numpy.zeros([dim[0],dim[1],4],dtype='uint8')
+    # a=numpy.zeros([dim[0],dim[1],4],dtype='uint8')
+    a=numpy.zeros([dim[0],dim[1],3],dtype='uint8') # gs no aplpha
     return a
 
-def ReadNoiseBlock():
-    img = Image.open('noisy_pattern2.png')
-    #img = Image.open('grid.png')
+def ReadNoiseBlock(noisefile):
+    img = Image.open(noisefile)
     img = numpy.array(img,dtype='uint8')
-    # TODO: maybe add Gaussian noise? (numpy.random.normal)
+    img = img[:,:,0:3] # gs no alpha
+
     return img
 
-def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoiseBlock ?
+def CopyNoiseBlock(img, background_panel, num_blocks): # maybe call this ReplicateNoiseBlock ?
     final = img.copy()
     for i in range(num_blocks):
         size = 150
         start = i * size
-        final[:,start:size+start,:]=noise_block
+        final[:,start:size+start,:]=background_panel
     return final
 
 def MakeMask(maskfile='circle.bmp'):
@@ -96,7 +109,8 @@ def GetShape(canvas, mask, position):
 # put filled template on empty canvas-sized layer at the right place
 def ShiftShape(img_size, cut_shape, insert_position, shift):
 
-    canvas_with_shifted_shape = numpy.zeros([img_size[0],img_size[1],4],dtype='uint8')
+    # canvas_with_shifted_shape = numpy.zeros([img_size[0],img_size[1],4],dtype='uint8')
+    canvas_with_shifted_shape = numpy.zeros([img_size[0],img_size[1],3],dtype='uint8') # gs no alpha
     # paste the cut shape on the array of zeros, at the shifted position
 
     ystart = insert_position[0]
@@ -158,7 +172,7 @@ def ShiftShape(img_size, cut_shape, insert_position, shift):
 
     canvas_with_shifted_shape[ max(ystart,0):min(yend,img_size[0]),\
             max(xstart,0):min(xend,img_size[1]), 0:3 ] = cut_shape
-    canvas_with_shifted_shape[:,:,3] = 255 
+    # canvas_with_shifted_shape[:,:,3] = 255  # gs no alpha
 
     figure(),imshow(canvas_with_shifted_shape)
     savefig('ss_canv_w_shift_shape.png',format='png',bbox_inches='tight')
@@ -172,10 +186,14 @@ def ShiftShape(img_size, cut_shape, insert_position, shift):
 def ApplyDecalLayerToCanvas(canvas, decal_layer):
     # This will return the canvas with decal applied at the shift location
     p = decal_layer!=0 # bunch of true/false values
+
+
+    pdb.set_trace()
+
+
     canvas[p] = decal_layer[p]
     return canvas
 
-# TODO: change "position" to "top_corner"
 # SHADOW SHIFT MUST BE NEGATIVE
 def AssembleLayer(canvas, decal_panel, insert_position, primary_shift, shadow_shift):
     # xstart for shadow: (shift = shadow_shift + primary_shift)
@@ -193,6 +211,13 @@ def AssembleLayer(canvas, decal_panel, insert_position, primary_shift, shadow_sh
                                         shadow_shift + primary_shift)
     canvas2 = ApplyDecalLayerToCanvas(canvas1, shadow_decal_layer)
     return canvas2
+
+
+
+
+
+
+
 
 if __name__=="__main__":
     p=main()
