@@ -1,19 +1,9 @@
 #PyEye.py
 
-"""
-1. Create canvas (600 x 250)
-2. Create noise block (default pattern, can take input) (150 x 250)
-3. Copy noise block and fill canvas
-4. Copy and paste a shape (<= width of noise block)
-5. Move shape 10 pixels to the right
-6. Copy shape, move width of noise block to the left.
-"""
-
 import matplotlib.pyplot as plt
 from pylab import *
 import numpy
 from PIL import Image
-#import pdb
 
 def main(dim=(250,600)): # strange how it makes you put it in y,x
     num_blocks = 4    
@@ -24,7 +14,6 @@ def main(dim=(250,600)): # strange how it makes you put it in y,x
     # enough so the shadow gets pushed off.
 
     canvas = CreateCanvas(dim=dim)
-    print 'Canvas shape: ', canvas.shape
 
     # TODO: should we just start with the noise block and replicate it out?
     #       maybe we don't neeeed a CreateCanvas...
@@ -34,39 +23,31 @@ def main(dim=(250,600)): # strange how it makes you put it in y,x
 
     noise_block = ReadNoiseBlock()
     canvas = CopyNoiseBlock(canvas,noise_block,num_blocks)
-
-    print 'Canvas2 shape: ',canvas.shape
     
-    # pdb.set_trace()    
     # TODO: make function to convert depth to shift
     mask_panel = MakeMask('star.bmp') # default is circle.bmp
     decal_panel = GetShape(canvas, mask_panel, top_corner) # we really need to rename "shape"
-    final_img = AssembleLayer(canvas, mask_panel, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size) 
-
-    print 'decal_panel shape: ',decal_panel.shape
-    print 'mask_panel shape: ',mask_panel.shape
-    print 'final_img shape: ',final_img.shape
+    final_img = AssembleLayer(canvas, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size) 
 
     figure(),imshow(final_img)
     savefig('final_img.png',format='png',bbox_inches='tight')
     
     return final_img
-    # TODO: write out image to file
+
 
 def CreateCanvas(dim):
     a=numpy.zeros([dim[0],dim[1],4],dtype='uint8')
     return a
 
 def ReadNoiseBlock():
-    img = Image.open('noisy_pattern2.png')
-    #img = Image.open('grid.png')
+    #img = Image.open('noisy_pattern2.png')
+    img = Image.open('grid.png')
     img = numpy.array(img)
     # TODO: maybe add Gaussian noise? (numpy.random.normal)
     return img
 
 def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoiseBlock ?
     final = img.copy()
-    # final = img
     for i in range(num_blocks):
         size = 150
         start = i * size
@@ -74,35 +55,33 @@ def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoi
     return final
 
 def MakeMask(maskfile='circle.bmp'):
-    # read the img file
     mask = Image.open(maskfile)
-    mask = numpy.array(mask,dtype='bool') > (255/2) # super simple comparator
-    ### 27 JULY 2012 6:37am (probably CDT): THIS BOOL FIXED IT!  BL
-    return mask
-    
-    # by making a new array and copying?
-    numask = numpy.ones([mask.shape[0], mask.shape[1], 4],dtype='uint8')
-    ### 27 JULY 2012 6:37am (probably CDT): POSSIBLY THIS UINT8 FIXED IT!  BL
-    numask[:,:,3] = 255
-    numask[:,:,0:3] = mask
 
-    return numask
+    figure(),imshow(mask)
+    savefig('mm_mask.png',format='png',bbox_inches='tight')
+
+    mask = numpy.array(mask) > (255/2) # super simple comparator
+    mask = mask!=0
+    print 'mm: masktype is ',mask.dtype
+    ### 27 JULY 2012 6:37am (probably CDT): THIS BOOL FIXED IT!  BL
+
+    figure(),imshow(mask)
+    savefig('mm_mask2.png',format='png',bbox_inches='tight')
+
+    return mask
 
 # more like "fill template"
 def GetShape(canvas, mask, position):
 
-    figure(),imshow(canvas)
-    savefig('gs_canvas.png',format='png',bbox_inches='tight')
-    
+    print mask
+    print mask.dtype
     figure(),imshow(mask)
     savefig('gs_mask.png',format='png',bbox_inches='tight')
-
-    print 'GetShape mask shape is: ', mask.shape
 
     ylen=mask.shape[0]
     xlen=mask.shape[1]
 
-    # position is the top left corner
+    # position is the canvas location of top corner of decal_panel
     ystart = position[0]
     xstart = position[1]
 
@@ -112,26 +91,13 @@ def GetShape(canvas, mask, position):
     cut_slice = numpy.zeros([ylen,xlen,3],dtype='uint8')
     cut_slice = canvas[ ystart:yend, xstart:xend, 0:3 ] * mask
 
-    #cut_slice = numpy.zeros([ylen,xlen,4],dtype='uint8')
-    #cut_slice[:,:,0:3] = canvas[ ystart:yend, xstart:xend, 0:3 ]
-    #cut_slice[:,:,3] = 255
-
-    #cut_slice = img[ ystart:yend, xstart:xend, 0:4 ]
-
-
-    #figure(),imshow(cut_slice)
-    #savefig('gs_cut_slice.png',format='png',bbox_inches='tight')
-
-    return cut_slice.astype('uint8')
+    return cut_slice
 
 # put filled template on empty canvas-sized layer at the right place
-def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
+def ShiftShape(img_size, cut_shape, insert_position, shift):
 
     canvas_with_shifted_shape = numpy.zeros([img_size[0],img_size[1],4],dtype='uint8')
     # paste the cut shape on the array of zeros, at the shifted position
-    
-    figure(),imshow(cut_shape)
-    savefig('ss_cut_shape.png',format='png',bbox_inches='tight')
 
     ystart = insert_position[0]
     xstart = insert_position[1] + shift
@@ -141,7 +107,7 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     # 24 JULY 2012: testing, because ShiftShape produces inverted colors in cutout when
     # shape is added to canvas.
     #
-    cut_shape_ylen = cut_shape.shape[0]
+   cut_shape_ylen = cut_shape.shape[0]
     cut_shape_xlen = cut_shape.shape[1]
 
     xend = xstart + cut_shape_xlen
@@ -171,26 +137,18 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     savefig('ss_canvas_with_shifted_shape.png',format='png',bbox_inches='tight')
     savefig('BALALALALLALAL.png',format='png',bbox_inches='tight')
     numpy.save('canvas_with_shifted_shape.npy',canvas_with_shifted_shape)
-    '''
-
     #
     ########################
+    '''
 
-    if (xstart < 0): # left shift
+    if (xstart < 0): # shadow
         cut_shape = cut_shape[:,-xstart:]
         #inv_template = inv_template[:,-xstart:]
 
-    if (xstart + cut_shape.shape[1] > img_size[1]): # right shift
+    if (xstart + cut_shape.shape[1] > img_size[1]): # primary
         cut_shape = cut_shape[:,0:img_size[1]-xstart]
         #inv_template = inv_template[:,0:img_size[1]-xstart]
     # TODO: Need to do the same for y-axis
-
-    #figure(),imshow(mask_panel)
-    #savefig('ss_mask_panel.png',format='png',bbox_inches='tight')
-
-    #figure(),imshow(cut_shape)
-    #savefig('ss_cut_shape.png',format='png',bbox_inches='tight')
-
 
     cut_shape_ylen = cut_shape.shape[0]
     cut_shape_xlen = cut_shape.shape[1]
@@ -199,7 +157,11 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     yend = ystart + cut_shape_ylen
 
     canvas_with_shifted_shape[ max(ystart,0):min(yend,img_size[0]),\
-            max(xstart,0):min(xend,img_size[1]), 0:3 ] = cut_shape[:,:,0:3]
+            max(xstart,0):min(xend,img_size[1]), 0:3 ] = cut_shape
+    canvas_with_shifted_shape[:,:,3] = 255 
+
+    figure(),imshow(canvas_with_shifted_shape)
+    savefig('ss_canv_w_shift_shape.png',format='png',bbox_inches='tight')
 
     return canvas_with_shifted_shape
 
@@ -209,63 +171,28 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
 # what's a word for filled template?
 def ApplyDecalLayerToCanvas(canvas, decal_layer):
     # This will return the canvas with decal applied at the shift location
-    figure(),imshow(decal_layer)
-    savefig('adltc_decal_layer.png',format='png',bbox_inches='tight')
-
     p = decal_layer!=0 # bunch of true/false values
-    #figure(),hist(p.flatten(),bins=50)
-    #savefig('adltc_histp.png',format='png',bbox_inches='tight')
-    #print p[150:170,90:110]
-
-    #ind = numpy.nonzero(p)
-    #print ind
-
-    #figure(),imshow(p)
-    #savefig('adltc_p.png',format='png',bbox_inches='tight')
-
-    #nope, this is broken now.  need to replace pixels!!!  25 July 2012 BL
-    #canvas = decal_layer * p #probably calling this wrong
-
     canvas[p] = decal_layer[p]
     return canvas
-    # the cheese slab is half a line now.
 
 # TODO: change "position" to "top_corner"
 # SHADOW SHIFT MUST BE NEGATIVE
-def AssembleLayer(canvas, mask_panel, decal_panel, insert_position, primary_shift, shadow_shift):
+def AssembleLayer(canvas, decal_panel, insert_position, primary_shift, shadow_shift):
     # xstart for shadow: (shift = shadow_shift + primary_shift)
     # for shadow_shift: shift is relative to primary shift
-    
-    #ShiftShape(img_size, cut_shape, insert_position, shift):
-    
+        
     img_size = canvas.shape
-
-    primary_decal_layer = ShiftShape(img_size, mask_panel, decal_panel, insert_position, primary_shift)
-
-    print 'primary_decal_layer.shape is: ',  primary_decal_layer.shape
-    figure(),imshow(primary_decal_layer)
-    savefig('ex_primary_decal_layer.png',format='png',bbox_inches='tight')
-    
+    primary_decal_layer = ShiftShape(img_size, decal_panel,\
+                                         insert_position,\
+                                         primary_shift)
     canvas1 = ApplyDecalLayerToCanvas(canvas, primary_decal_layer)
-    
-    #figure(),imshow(canvas1)
-    #savefig('ex_canvas1.png',format='png',bbox_inches='tight')
 
-    shadow_decal_layer = ShiftShape(img_size, mask_panel, decal_panel, insert_position, shadow_shift + primary_shift)
+
+    shadow_decal_layer = ShiftShape(img_size, decal_panel,\
+                                        insert_position,\
+                                        shadow_shift + primary_shift)
     canvas2 = ApplyDecalLayerToCanvas(canvas1, shadow_decal_layer)
-
-
-    figure(),imshow(shadow_decal_layer)
-    savefig('ex_shadow_decal_layer.png',format='png',bbox_inches='tight')
-
     return canvas2
-
-    # 1. get primary decal_layer (tells ShiftShape how much to shift)
-    # 1b. apply decal layer to canvas
-    # 2. get shadow decal_layer (tells ShiftShape how much to shift)
-    # 2b. apply decal layer to canvas
-    # 3. Rinse, repeat.
-
 
 if __name__=="__main__":
     p=main()
