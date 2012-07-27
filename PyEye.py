@@ -136,6 +136,7 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     ystart = insert_position[0]
     xstart = insert_position[1] + shift
     
+    '''
     ########################
     # 24 JULY 2012: testing, because ShiftShape produces inverted colors in cutout when
     # shape is added to canvas.
@@ -158,6 +159,7 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     #It fixes one problem (the canvas-being-blank problem)
     canvas_with_shifted_shape[:,:,3] = 255 
 
+
     figure(),imshow(cut_shape)
     savefig('ss_cut_shape2.png',format='png',bbox_inches='tight')
     numpy.save('cut_shape.npy',cut_shape) 
@@ -169,11 +171,11 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
     savefig('ss_canvas_with_shifted_shape.png',format='png',bbox_inches='tight')
     savefig('BALALALALLALAL.png',format='png',bbox_inches='tight')
     numpy.save('canvas_with_shifted_shape.npy',canvas_with_shifted_shape)
+    '''
 
     #
     ########################
 
-    '''
     if (xstart < 0): # left shift
         cut_shape = cut_shape[:,-xstart:]
         #inv_template = inv_template[:,-xstart:]
@@ -198,8 +200,6 @@ def ShiftShape(img_size, mask_panel, cut_shape, insert_position, shift):
 
     canvas_with_shifted_shape[ max(ystart,0):min(yend,img_size[0]),\
             max(xstart,0):min(xend,img_size[1]), 0:3 ] = cut_shape[:,:,0:3]
-
-    '''
 
     return canvas_with_shifted_shape
 
