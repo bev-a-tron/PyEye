@@ -40,9 +40,9 @@ def CreateCanvas(dim):
     return a
 
 def ReadNoiseBlock():
-    #img = Image.open('noisy_pattern2.png')
-    img = Image.open('grid.png')
-    img = numpy.array(img)
+    img = Image.open('noisy_pattern2.png')
+    #img = Image.open('grid.png')
+    img = numpy.array(img,dtype='uint8')
     # TODO: maybe add Gaussian noise? (numpy.random.normal)
     return img
 
@@ -57,26 +57,26 @@ def CopyNoiseBlock(img, noise_block, num_blocks): # maybe call this ReplicateNoi
 def MakeMask(maskfile='circle.bmp'):
     mask = Image.open(maskfile)
 
-    figure(),imshow(mask)
-    savefig('mm_mask.png',format='png',bbox_inches='tight')
+    #figure(),imshow(mask)
+    #savefig('mm_mask.png',format='png',bbox_inches='tight')
 
     mask = numpy.array(mask) > (255/2) # super simple comparator
     mask = mask!=0
-    print 'mm: masktype is ',mask.dtype
+    #print 'mm: masktype is ',mask.dtype
     ### 27 JULY 2012 6:37am (probably CDT): THIS BOOL FIXED IT!  BL
 
-    figure(),imshow(mask)
-    savefig('mm_mask2.png',format='png',bbox_inches='tight')
+    #figure(),imshow(mask)
+    #savefig('mm_mask2.png',format='png',bbox_inches='tight')
 
     return mask
 
 # more like "fill template"
 def GetShape(canvas, mask, position):
 
-    print mask
-    print mask.dtype
-    figure(),imshow(mask)
-    savefig('gs_mask.png',format='png',bbox_inches='tight')
+    #print mask
+    #print mask.dtype
+    #figure(),imshow(mask)
+    #savefig('gs_mask.png',format='png',bbox_inches='tight')
 
     ylen=mask.shape[0]
     xlen=mask.shape[1]
