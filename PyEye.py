@@ -6,7 +6,7 @@ import numpy
 from PIL import Image
 
 
-import pdb # TODO: remove me
+#import pdb # TODO: remove me
 
 def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', out_file_name='final_img', out_file_type='png'):
 # NOTE: strange how it makes you put it in y,x
@@ -30,7 +30,7 @@ def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', ou
     final_img = AssembleLayer(canvas, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size) 
 
     figure(),imshow(final_img)
-    savefig(out_file_name,format=out_file_type,bbox_inches='tight')
+    savefig(out_file_name+'.'+out_file_type,format=out_file_type,bbox_inches='tight')
     
     return final_img
 
@@ -186,12 +186,17 @@ def ShiftShape(img_size, cut_shape, insert_position, shift):
 def ApplyDecalLayerToCanvas(canvas, decal_layer):
     # This will return the canvas with decal applied at the shift location
     p = decal_layer!=0 # bunch of true/false values
+    #p = numpy.nonzero(decal_layer==0)
 
+    print p.shape,canvas.shape,decal_layer.shape
+    for i in range(canvas.shape[0]):
+        for j in range(canvas.shape[1]):
+            if p[i,j,0]: canvas[i,j,:] = decal_layer[i,j,:]
 
-    pdb.set_trace()
-
-
-    canvas[p] = decal_layer[p]
+    #figure(500),imshow(p)
+    #canvas = canvas * p
+    #pdb.set_trace()
+    #canvas[p] = decal_layer[p]
     return canvas
 
 # SHADOW SHIFT MUST BE NEGATIVE
@@ -212,15 +217,9 @@ def AssembleLayer(canvas, decal_panel, insert_position, primary_shift, shadow_sh
     canvas2 = ApplyDecalLayerToCanvas(canvas1, shadow_decal_layer)
     return canvas2
 
-
-
-
-
-
-
-
 if __name__=="__main__":
-    p=main()
+    p=main(bg_file='grid.png',mask_file = 'star.bmp')
+    #p=main(mask_file='star.bmp',bg_file='noisy_pattern.png')
     print 'test'
     #plt.figure(),plt.imshow(p)
     
