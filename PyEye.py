@@ -21,16 +21,23 @@ def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', ou
     # TODO: when this goes OO, we can easily grab the panel's size prop
     # TODO: figure out a way to not need this...
     panel_size = mask_panel.shape
-
     slice_size = panel_size[1]
+
     top_corner = ( 0, (dim[1] - slice_size)/2 - 50 )
-
-
     decal_panel = GetShape(canvas, mask_panel, top_corner) # TODO: we really need to rename "shape"
     final_img = AssembleLayer(canvas, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size) 
 
     figure(),imshow(final_img)
-    savefig(out_file_name+'.'+out_file_type,format=out_file_type,bbox_inches='tight')
+    savefig(out_file_name+'1.'+out_file_type,format=out_file_type,bbox_inches='tight')
+
+
+    #can I make a second picture on the thing?
+    mask_panel = MakeMask('star.bmp')
+    top_corner = ( 0, (dim[1] - slice_size)/2 -30 )
+    decal_panel = GetShape(final_img, mask_panel, top_corner) # TODO: we really need to rename "shape"
+    final_img = AssembleLayer(final_img, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size)         
+    figure(),imshow(final_img)
+    savefig(out_file_name+'2.'+out_file_type,format=out_file_type,bbox_inches='tight')
     
     return final_img
 
@@ -218,7 +225,8 @@ def AssembleLayer(canvas, decal_panel, insert_position, primary_shift, shadow_sh
     return canvas2
 
 if __name__=="__main__":
-    p=main(bg_file='grid.png',mask_file = 'star.bmp')
+    #p=main(bg_file='grid.png')
+    p=main(bg_file='noisy_pattern.png')
     #p=main(mask_file='star.bmp',bg_file='noisy_pattern.png')
     print 'test'
     #plt.figure(),plt.imshow(p)

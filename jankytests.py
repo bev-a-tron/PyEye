@@ -61,7 +61,18 @@ def test_GetShape():
     return check_ones and check_zeroes
 
 def test_ShiftShape():
-    
+    # ShiftShape already takes a cut shape and a canvas with texture
+    # it just places the cut_shape at the insert position.
+    # How can I test that this function succeeds?
+    # test 1) does it shift the right amount
+    # test 2) does it paste the shape there?
+    # idea: instead of using shape with pattern, just use 1s and 0s
+
+    decal_panel = helper_MakeMask()
+    img = helper_GetCanvas()
+
+    img_size = img.shape
+    decal_layer = PyEye.ShiftShape(img_size, cut_shape, insert_position, shift):
     return False
 
 def test_AssembleLayer():
