@@ -8,7 +8,11 @@ from PIL import Image
 
 #import pdb # TODO: remove me
 
-def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', out_file_name='final_img', out_file_type='png'):
+def moving():
+    for i in range(40):
+        main(dist_from_middle = i)
+
+def main(dim=(250,600), dist_from_middle = 50, bg_file='noisy_pattern2.png', mask_file='circle.bmp', out_file_name='animated', out_file_type='png'):
 # NOTE: strange how it makes you put it in y,x
 
     canvas = CreateBackground(noisefile=bg_file)
@@ -23,14 +27,16 @@ def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', ou
     panel_size = mask_panel.shape
     slice_size = panel_size[1]
 
-    top_corner = ( 0, (dim[1] - slice_size)/2 - 50 )
+    top_corner = ( 0, (dim[1] - slice_size)/2 - dist_from_middle )
+    #top_corner = ( 0, (dim[1] - slice_size)/2 - 50 )
     decal_panel = GetShape(canvas, mask_panel, top_corner) # TODO: we really need to rename "shape"
     final_img = AssembleLayer(canvas, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size) 
 
     figure(),imshow(final_img)
-    savefig(out_file_name+'1.'+out_file_type,format=out_file_type,bbox_inches='tight')
+    #savefig(out_file_name+'1.'+out_file_type,format=out_file_type,bbox_inches='tight')
+    savefig(out_file_name + '_%u'%(dist_from_middle)+'.'+out_file_type,format=out_file_type,bbox_inches='tight')
 
-
+    '''
     #can I make a second picture on the thing?
     mask_panel = MakeMask('star.bmp')
     top_corner = ( 0, (dim[1] - slice_size)/2 -30 )
@@ -38,7 +44,8 @@ def main(dim=(250,600), bg_file='noisy_pattern2.png', mask_file='circle.bmp', ou
     final_img = AssembleLayer(final_img, decal_panel, top_corner, primary_shift=10, shadow_shift=-slice_size)         
     figure(),imshow(final_img)
     savefig(out_file_name+'2.'+out_file_type,format=out_file_type,bbox_inches='tight')
-    
+    '''    
+
     return final_img
 
 
@@ -227,6 +234,7 @@ def AssembleLayer(canvas, decal_panel, insert_position, primary_shift, shadow_sh
 if __name__=="__main__":
     #p=main(bg_file='grid.png')
     p=main(bg_file='noisy_pattern.png')
+    moving()
     #p=main(mask_file='star.bmp',bg_file='noisy_pattern.png')
     print 'test'
     #plt.figure(),plt.imshow(p)
